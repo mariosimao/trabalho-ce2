@@ -124,10 +124,10 @@ def parseVoltageControlledVoltageSource(component: list, equation: dict):
         equation["G"][extraIndex, v_out_negative] += 1
 
     if (v_in_positive != -1):
-        equation["G"][extraIndex, v_in_positive] += 1
+        equation["G"][extraIndex, v_in_positive] += gain
 
     if (v_in_negative != -1):
-        equation["G"][extraIndex, v_in_negative] -= 1
+        equation["G"][extraIndex, v_in_negative] -= gain
 
 totalNodes = 0
 for component in netlist:
