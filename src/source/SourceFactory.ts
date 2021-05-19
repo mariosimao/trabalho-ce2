@@ -1,5 +1,5 @@
 import DCSource from "./DCSource";
-import SinSource from "./SinSource";
+import CosSource from "./CosSource";
 import Source from "./Source";
 
 export default class SourceFactory {
@@ -10,14 +10,14 @@ export default class SourceFactory {
       case 'DC':
         const dcAmplitude = parseFloat(values[1]);
         return new DCSource(dcAmplitude);
-      case 'SIN':
-        const sinAmplitude = parseFloat(values[2]);
-        const sinFrequency = parseFloat(values[3]);
-        const sinAngle = parseFloat(values[6])
+      case 'COS':
+        const cosAmplitude = parseFloat(values[2]);
+        const cosFrequency = parseFloat(values[3]);
+        const cosAngle = parseFloat(values[6])
 
-        return new SinSource(sinAmplitude, sinFrequency, sinAngle);
+        return new CosSource(cosAmplitude, cosFrequency, cosAngle);
       default:
-        break;
+        throw new Error("Could not parse source");
     }
   }
 }

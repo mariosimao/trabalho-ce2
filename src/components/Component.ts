@@ -1,15 +1,22 @@
 import { Matrix } from 'mathjs';
+import Node from '../Node';
+import Source from '../source/Source';
 
 export default interface Component {
+  name: string;
+  nodes: Node[];
+  addedDimensions: number;
+  hasSource: boolean;
+  source: Source | null;
+
   conductanceMatrix(
     equationSize: number,
-    currentExtraDimension: number,
+    currentExtraIndex: number,
+    frequency: number,
   ): Matrix;
 
   currentSourceVector(
     equationSize: number,
-    currentExtraDimension: number,
+    currentExtraIndex: number,
   ): Matrix;
-
-  dimensionsAdded(): number;
 }

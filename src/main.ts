@@ -1,10 +1,119 @@
-import Resistor from "./components/Resistor";
+import { add, lusolve, matrix, round, zeros } from "mathjs";
+import ComponentFactory from "./components/ComponentFactory";
 
-const input = 'R_R2 2 4 2';
+const trabalho1 = `R_R2 2 4 2
+R_R1 0 1 1
+R_R3 3 1 3
+R_R4 2 0 4
+V_V1 1 4 DC 6
+R_R5 5 0 5
+G_G1 0 2 5 0 1
+E_E1 3 5 1 0 1
+I_I1 2 5 DC 7`;
 
-const component = Resistor.fromNetlist(input);
+const p1e1 = `I_ig 1 0 COS (0 10 500 0 0 2.61799 0)
+C_C1 1 0 0.0000025
+H_H1 2 1 1 0 10
+L_L1 2 3 0.001
+R_R1 3 0 20`;
 
-console.log(component.conductanceMatrix());
+const lista1exercicio3a = `V_V1 1 0 DC 1
+V_V2 2 3 DC 2
+R_R1 0 2 1
+R_R2 0 3 2
+R_R3 3 1 2
+G_G1 1 2 3 0 3`
+
+const lista1exercicio3c = `H_H1 1 4 3 4 10
+F_F1 0 1 1 2 2
+V_V1 3 0 DC 10
+R_R1 2 0 1
+R_R2 4 0 2
+R_R3 3 2 1`;
+
+// SIN (<nível contínuo> <amplitude> <frequência> <atraso> <atenuação> <ângulo> <ciclos>)
+const lista2exercicio1a = `V_V1 1 0 COS (0 10 100 0 0 0 0)
+R_R1 1 2 10
+C_C1 2 0 10
+L_L1 2 3 1
+R_R2 3 0 20`
+
+const input = lista2exercicio1a;
+
+const components = input.trim().split('\n').map((line) => {
+  const component = ComponentFactory.fromNetlistLine(line);
+
+  return component;
+});
+
+const nodeNumbers = new Set();
+components.map((c) => {
+  c.nodes.map(n => nodeNumbers.add(n.originalNumber));
+})
+
+nodeNumbers.delete(0);
+
+let frequency = 0;
+components.map(c => c.hasSource ? frequency = c.source.getFrequency() : null);
+
+const originalEquationSize = nodeNumbers.size;
+let modifiedEquationSize = originalEquationSize;
+components.map((c) => {
+  modifiedEquationSize += c.addedDimensions;
+});
+
+let conductanceMatrix = matrix(zeros([
+  modifiedEquationSize,
+  modifiedEquationSize,
+]));
+let currentVector = matrix(zeros([modifiedEquationSize, 1]));
+let currentExtraIndex = originalEquationSize - 1;
+const labels = [];
+for (let i = 1; i <= originalEquationSize; i++) {
+  labels.push(`Node ${i+1} (V)`);
+}
+components.forEach((c, i) => {
+  for (let ci = 0; ci < c.addedDimensions; ci++) {
+    labels.push(`${c.name} (A)`);
+  }
+
+  currentExtraIndex = currentExtraIndex + c.addedDimensions;
+
+  const componentConductanceMatrix = c.conductanceMatrix(
+    modifiedEquationSize,
+    currentExtraIndex,
+    frequency
+  );
+
+  const componentCurrentVector = c.currentSourceVector(
+    modifiedEquationSize,
+    currentExtraIndex
+  );
+
+  // @ts-ignore
+  conductanceMatrix = add(conductanceMatrix, componentConductanceMatrix);
+  // @ts-ignore
+  currentVector = add(currentVector, componentCurrentVector);
+})
+
+// console.table(conductanceMatrix.toArray());
+// console.table(currentVector.toArray());
+
+const voltageVector = lusolve(conductanceMatrix, currentVector);
+
+// @ts-ignore
+console.table(voltageVector.toArray().reduce(
+  (p, e, i) => {
+    const re = round((e[0].re + Number.EPSILON) * 1000000000) / 1000000000;
+    const im = round((e[0].im + Number.EPSILON) * 1000000000) / 1000000000;
+
+    const label = labels[i];
+    p[label] = `${re} ${im}i`;
+
+    return p;
+  }, []
+));
+
 
 // Básico
 

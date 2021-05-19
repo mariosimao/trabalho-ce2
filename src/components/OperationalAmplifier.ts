@@ -3,7 +3,7 @@ import Component from './Component';
 import Node from '../Node';
 import MatrixHelper from '../helpers/MatrixHelper';
 
-export default class Resistor implements Component {
+export default class OperationalAmplifier implements Component {
   readonly name: string;
   readonly nodes: Node[];
   readonly addedDimensions = 1;
@@ -12,47 +12,44 @@ export default class Resistor implements Component {
 
   private positiveNode: Node;
   private negativeNode: Node;
-  private resistance: number;
+  private vPositiveNode: Node;
+  private vNegativeNode: Node;
 
   constructor(
     name: string,
     positiveNode: Node,
     negativeNode: Node,
-    resistance: number,
+    vPositiveNode: Node,
+    vNegativeNode: Node,
   ) {
     this.name = name;
     this.positiveNode = positiveNode;
     this.negativeNode = negativeNode;
-    this.resistance = resistance;
+    this.vPositiveNode = vPositiveNode;
+    this.vNegativeNode = vNegativeNode;
 
-    this.nodes = [positiveNode, negativeNode];
-  }
-
-  private conductance(): number {
-    return (1 / this.resistance);
+    this.nodes = [positiveNode, negativeNode, vPositiveNode, vNegativeNode];
   }
 
   conductanceMatrix(
     equationSize: number,
-    extraIndex: number,
+    currentExtraIndex: number,
     frequency: number,
   ): Matrix {
     const conductanceMatrix = matrix(zeros([equationSize, equationSize]));
 
+    const extraIndex = currentExtraIndex;
+
     const positive = this.positiveNode.matrixNumber();
     const negative = this.negativeNode.matrixNumber();
+    const vPositive = this.vPositiveNode.matrixNumber();
+    const vNegative = this.vNegativeNode.matrixNumber();
 
     if (this.positiveNode.isNotGround()) {
       MatrixHelper.addValue(
         conductanceMatrix,
         [positive, extraIndex],
-        +1,
-      );
-
-      MatrixHelper.addValue(
-        conductanceMatrix,
-        [extraIndex, positive],
-        -1,
+        +1
       );
     }
 
@@ -60,21 +57,25 @@ export default class Resistor implements Component {
       MatrixHelper.addValue(
         conductanceMatrix,
         [negative, extraIndex],
-        -1,
-      );
-
-      MatrixHelper.addValue(
-        conductanceMatrix,
-        [extraIndex, negative],
-        +1,
+        -1
       );
     }
 
-    MatrixHelper.addValue(
-      conductanceMatrix,
-      [extraIndex, extraIndex],
-      this.resistance,
-    );
+    if (this.vPositiveNode.isNotGround()) {
+      MatrixHelper.addValue(
+        conductanceMatrix,
+        [extraIndex, vPositive],
+        +1
+      );
+    }
+
+    if (this.vNegativeNode.isNotGround()) {
+      MatrixHelper.addValue(
+        conductanceMatrix,
+        [extraIndex, vNegative],
+        -1
+      );
+    }
 
     return conductanceMatrix;
   }

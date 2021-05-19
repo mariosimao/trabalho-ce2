@@ -1,13 +1,18 @@
-import { Matrix, matrix } from 'mathjs';
+import { Matrix, matrix, zeros } from 'mathjs';
+import MatrixHelper from '../helpers/MatrixHelper';
 import Node from '../Node';
 import Source from '../source/Source';
 import Component from './Component';
 
 export default class CurrentSource implements Component {
-  private name: string;
+  readonly name: string;
+  readonly nodes: Node[];
+  readonly addedDimensions = 0;
+  readonly hasSource = true;
+  readonly source: Source;
+
   private positiveNode: Node;
   private negativeNode: Node;
-  private source: Source;
 
   public constructor(
     name: string,
@@ -19,36 +24,42 @@ export default class CurrentSource implements Component {
     this.positiveNode = positiveNode;
     this.negativeNode = negativeNode;
     this.source = source;
+
+    this.nodes = [positiveNode, negativeNode];
   }
 
-  conductanceMatrix(): Matrix {
-    return matrix();
+  conductanceMatrix(
+    equationSize: number,
+    currentExtraIndex: number,
+  ): Matrix {
+    return matrix(zeros([equationSize, equationSize]));
   }
 
-  currentSourceVector(): Matrix {
-    const vector = matrix();
+  currentSourceVector(
+    equationSize: number,
+    currentExtraIndex: number,
+  ): Matrix {
+    const vector = matrix(zeros([equationSize, 1]));
 
-    const positiveNode = this.positiveNode.matrixNumber();
-    const negativeNode = this.negativeNode.matrixNumber();
+    const positive = this.positiveNode.matrixNumber();
+    const negative = this.negativeNode.matrixNumber();
 
     if (this.positiveNode.isNotGround()) {
-      vector.set(
-        [positiveNode, 0],
-        (-1) * this.source.getAmplitude(),
+      MatrixHelper.addValue(
+        vector,
+        [positive, 0],
+        -this.source.getAmplitude(),
       );
     }
 
     if (this.negativeNode.isNotGround()) {
-      vector.set(
-        [negativeNode, 0],
-        this.source.getAmplitude(),
+      MatrixHelper.addValue(
+        vector,
+        [negative, 0],
+        +this.source.getAmplitude(),
       );
     }
 
     return vector;
-  }
-
-  dimensionsAdded(): number {
-    return 0;
   }
 }

@@ -1,9 +1,9 @@
-import { matrix, Matrix, zeros } from 'mathjs';
+import { Complex, complex, matrix, Matrix, zeros } from 'mathjs';
 import Component from './Component';
 import Node from '../Node';
 import MatrixHelper from '../helpers/MatrixHelper';
 
-export default class Resistor implements Component {
+export default class Inductor implements Component {
   readonly name: string;
   readonly nodes: Node[];
   readonly addedDimensions = 1;
@@ -12,24 +12,24 @@ export default class Resistor implements Component {
 
   private positiveNode: Node;
   private negativeNode: Node;
-  private resistance: number;
+  private inductance: number;
 
   constructor(
     name: string,
     positiveNode: Node,
     negativeNode: Node,
-    resistance: number,
+    inductance: number,
   ) {
     this.name = name;
     this.positiveNode = positiveNode;
     this.negativeNode = negativeNode;
-    this.resistance = resistance;
+    this.inductance = inductance;
 
     this.nodes = [positiveNode, negativeNode];
   }
 
-  private conductance(): number {
-    return (1 / this.resistance);
+  private impedance(frequency: number): Complex {
+    return complex(0, frequency * this.inductance);
   }
 
   conductanceMatrix(
@@ -46,13 +46,13 @@ export default class Resistor implements Component {
       MatrixHelper.addValue(
         conductanceMatrix,
         [positive, extraIndex],
-        +1,
+        +1
       );
 
       MatrixHelper.addValue(
         conductanceMatrix,
         [extraIndex, positive],
-        -1,
+        -1
       );
     }
 
@@ -60,20 +60,20 @@ export default class Resistor implements Component {
       MatrixHelper.addValue(
         conductanceMatrix,
         [negative, extraIndex],
-        -1,
+        -1
       );
 
       MatrixHelper.addValue(
         conductanceMatrix,
         [extraIndex, negative],
-        +1,
+        +1
       );
     }
 
     MatrixHelper.addValue(
       conductanceMatrix,
       [extraIndex, extraIndex],
-      this.resistance,
+      this.impedance(frequency)
     );
 
     return conductanceMatrix;

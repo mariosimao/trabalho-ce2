@@ -1,3 +1,4 @@
+import { complex, Complex } from "mathjs";
 import Source from "./Source";
 
 export default class DCSource implements Source {
@@ -17,5 +18,9 @@ export default class DCSource implements Source {
 
   public getAngle(): number {
     return 0;
+  }
+
+  public getComplex(): Complex {
+    return complex(this.amplitude, 0);
   }
 }

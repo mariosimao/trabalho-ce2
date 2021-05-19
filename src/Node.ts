@@ -1,5 +1,5 @@
 export default class Node {
-  private originalNumber: number;
+  originalNumber: number;
 
   constructor(nodeNumber: number) {
     this.originalNumber = nodeNumber;

@@ -1,6 +1,7 @@
+import { complex, Complex } from "mathjs";
 import Source from "./Source";
 
-export default class SinSource implements Source {
+export default class CosSource implements Source {
   private amplitude: number;
   private frequency: number;
   private angle: number;
@@ -25,5 +26,12 @@ export default class SinSource implements Source {
 
   public getAngle(): number {
     return this.angle;
+  }
+
+  public getComplex(): Complex {
+    return complex({
+      r: this.amplitude,
+      phi: this.angle,
+    })
   }
 }
